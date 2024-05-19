@@ -1,5 +1,6 @@
 '''
 This programe is based on MNIST database. It basically predict the handwritten digits.  
+
 '''
 
 #Imports
@@ -7,25 +8,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation 
-
-
-#data load
-data = pd.read_csv('train.csv')
-
-data = np.array(data)
-m, n = data.shape # 42000 X 785
-np.random.shuffle(data)
-
-data_dev = data[0:1000].T
-Y_dev = data_dev[0] #lable
-X_dev = data_dev[1:n]
-X_dev = X_dev / 255.
-
-data_train = data[1000:m].T
-Y_train = data_train[0]
-X_train = data_train[1:n]
-X_train = X_train / 255. 
-_,m_train = X_train.shape
 
 
 #Neural network math
@@ -86,8 +68,9 @@ def modal_predictions(A2):
     return np.argmax(A2,0)
 
 def modal_accu(predictions, Y):
-    print(predictions, Y)
-    return np.sum(predictions==Y)/Y.size
+    # print(predictions, Y)
+    accu =  round(np.sum(predictions==Y)*100.0/Y.size,2)
+    return accu
 
 def gredient_decent(X, Y, iteration, alpha):
     w1, w2, b1, b2 = init_prams()
@@ -96,12 +79,11 @@ def gredient_decent(X, Y, iteration, alpha):
         dW1, dW2, db1, db2 = back_prop(Z1, Z2, A1, A2, w2, X, Y)
         w1, w2, b1, b2 = update_prams(w1, w2, b1, b2, dW1, dW2, db1, db2, alpha)
         if (i % 10 == 0):
+            print("--"*25)
             print("Iteration: ",i)
-            print("Accuracy:", modal_accu(modal_predictions(A2),Y))
+            print(f"Accuracy: {modal_accu(modal_predictions(A2),Y)} %")
+            print("--"*25)
     return w1, w2, b1, b2
-
-w1, w2, b1, b2 = gredient_decent(X_train, Y_train, 1000, 0.1)
-
 
 def make_predictions(X, W1, b1, W2, b2):
     _,_,_,A2 = forward_prop(W1, W2, b1, b2, X)
@@ -123,9 +105,33 @@ def test_prediction(W1, b1, W2, b2, CI, label):
     plt.show()
 
 
+
+#data load
+data = pd.read_csv('train.csv')
+
+data = np.array(data)
+m, n = data.shape # 42000 X 785
+np.random.shuffle(data)
+
+data_dev = data[0:1000].T
+Y_dev = data_dev[0] #lable
+X_dev = data_dev[1:n]
+X_dev = X_dev / 255.
+
+data_train = data[1000:m].T
+Y_train = data_train[0]
+X_train = data_train[1:n]
+X_train = X_train / 255. 
+
+
+w1, w2, b1, b2 = gredient_decent(X_train, Y_train, 1000, 0.1)
+
 while True:
-    user_input = input('number: ')
-    user_input = int(user_input)
-    CI = X_train[:,user_input,None]
-    label = Y_train[user_input]
-    test_prediction(w1, b1, w2, b2, CI, label)   
+    user_input = input('Index: ')
+    try:
+        user_input = int(user_input)
+        CI = X_train[:,user_input,None]
+        label = Y_train[user_input]
+        test_prediction(w1, b1, w2, b2, CI, label)
+    except IndexError:
+        print("Please enter the index between 0 to 40999")
